@@ -66,6 +66,59 @@ function geoLong(date,planet){
 function ayanamsa(date){const y=date.getUTCFullYear()+(date.getUTCMonth()+.5)/12;return 23.85675+(y-2000)*.013968}
 function formatPos(lon){const s=Math.floor(lon/30),d=lon%30,deg=Math.floor(d),min=Math.floor((d-deg)*60);return {sign:s,deg,min,txt:String(deg).padStart(2,"0")+"°"+String(min).padStart(2,"0")+"′"}}
 function houseFrom(lon,baseSign){return (Math.floor(lon/30)-baseSign+12)%12+1}
+// Dasa calculators for the fixed natal chart. Calendar years use 365.2425 days.
+const dasaBirth=new Date("1999-02-02T16:45:00Z"); // 23:45 Vietnam time (UTC+7)
+const signLord={0:"Mars",1:"Venus",2:"Mercury",3:"Moon",4:"Sun",5:"Mercury",6:"Venus",7:"Mars",8:"Jupiter",9:"Saturn",10:"Saturn",11:"Jupiter"};
+const vimOrder=["Ketu","Venus","Sun","Moon","Mars","Rahu","Jupiter","Saturn","Mercury"];
+const vimYears={Ketu:7,Venus:20,Sun:6,Moon:10,Mars:7,Rahu:18,Jupiter:16,Saturn:19,Mercury:17};
+const planetSigns={Sun:9,Moon:4,Mars:6,Mercury:9,Jupiter:11,Venus:10,Saturn:0,Rahu:3,Ketu:9};
+const signNameVi=["Bạch Dương","Kim Ngưu","Song Tử","Cự Giải","Sư Tử","Xử Nữ","Thiên Bình","Bọ Cạp","Nhân Mã","Ma Kết","Bảo Bình","Song Ngư"];
+function addDasaYears(date,years){return new Date(date.getTime()+years*365.2425*86400000)}
+function fmtDasaDate(d){return new Intl.DateTimeFormat("vi-VN",{day:"2-digit",month:"2-digit",year:"numeric",timeZone:"Asia/Ho_Chi_Minh"}).format(d)}
+function mandookaOrder(){
+ // K.N. Rao-style leap sequence: Libra is a movable/odd-sign seed for this natal.
+ // Libra seed: movable signs first, then dual, then fixed; leap by three signs in each quartet.
+ return [6,9,0,3,8,11,2,5,1,10,7,4];
+}
+function mandookaYears(sign){
+ const lord=signLord[sign],lordSign=planetSigns[lord];
+ if(lordSign===sign)return 12;
+ // Odd signs count forward from sign to lord; even signs count backward.
+ let count=1,cur=sign;
+ for(let i=0;i<11&&cur!==lordSign;i++){cur=(cur+(sign%2===0?1:11))%12;count++}
+ // Published K.N. Rao notes specify 10 years when the lord is in the 7th.
+ if((lordSign-sign+12)%12===6)return 10;
+ return count;
+}
+function renderDasaTimeline(periods,now,currentEl,timelineEl,kind){
+ const active=periods.find(p=>now>=p.start&&now<p.end);
+ if(active){
+   currentEl.innerHTML='<strong>'+active.label+'</strong><div>'+fmtDasaDate(active.start)+' – '+fmtDasaDate(active.end)+'</div><small>Giai đoạn hiện tại tại ngày đã chọn</small>';
+ }else{
+   currentEl.innerHTML='<strong>Chưa xác định</strong><small>Ngày chọn nằm ngoài phạm vi đã tính.</small>';
+ }
+ timelineEl.innerHTML=periods.map(p=>'<div class="dasa-period '+(p===active?'active':'')+'"><div><strong>'+p.label+'</strong><small>'+p.years.toFixed(2)+' năm</small></div><time>'+fmtDasaDate(p.start)+'<br>→ '+fmtDasaDate(p.end)+'</time></div>').join("");
+}
+function renderDasa(){
+ const val=document.getElementById("transitDate").value,parts=val.split("-").map(Number),now=new Date(Date.UTC(parts[0],parts[1]-1,parts[2],5));
+ // Show the next 12 sign periods from birth, then extend if needed to cover the selected date.
+ const seq=mandookaOrder();let cursor=new Date(dasaBirth),periods=[],cycles=0;
+ while(cursor<=now&&cycles<10){
+   for(const sign of seq){const years=mandookaYears(sign),end=addDasaYears(cursor,years);periods.push({label:signNameVi[sign]+" · "+signs[sign],years,start:new Date(cursor),end,sign});cursor=end;if(cursor>now)break}
+   cycles++;
+ }
+ renderDasaTimeline(periods,now,document.getElementById("mandookaCurrent"),document.getElementById("mandookaTimeline"),"sign");
+ document.getElementById("mandookaNote").textContent="Biến thể đang dùng: Mandooka kiểu K.N. Rao — nhảy theo nhóm cung cùng tính chất; độ dài tính từ cung đến chủ tinh (không trừ 1), cung tự chủ 12 năm và chủ tinh ở cung đối diện 10 năm. Lưu ý: natal này có 3 hành tinh không phải nút ở Kendra (Sun, Mercury, Saturn), nên chưa đạt điều kiện áp dụng ≥4 hành tinh theo mô tả thường được trích cho phương pháp K.N. Rao; timeline chỉ để tham khảo thử nghiệm.";
+ const start=document.getElementById("taraStart").value;
+ // Tara variant documented by Sanjay Rath: strongest Kendra graha first, then remaining Kendra, Panapara and Apoklima grahas; Vimshottari year lengths.
+ const groupFor=p=>{const h=(planetSigns[p]-6+12)%12+1;return h===1||h===4||h===7||h===10?0:[2,5,8,11].includes(h)?1:2};
+ const rotated=[...vimOrder.slice(vimOrder.indexOf(start)),...vimOrder.slice(0,vimOrder.indexOf(start))];
+ const taraSeq=[0,1,2].flatMap(group=>rotated.filter(p=>groupFor(p)===group));
+ cursor=new Date(dasaBirth);periods=[];cycles=0;
+ while(cursor<=now&&cycles<10){for(const p of taraSeq){const years=vimYears[p],end=addDasaYears(cursor,years);periods.push({label:p+" · "+({Sun:"Su",Moon:"Mo",Mars:"Ma",Mercury:"Me",Jupiter:"Ju",Venus:"Ve",Saturn:"Sa",Rahu:"Ra",Ketu:"Ke"}[p]),years,start:new Date(cursor),end,planet:p});cursor=end;if(cursor>now)break}cycles++}
+ renderDasaTimeline(periods,now,document.getElementById("taraCurrent"),document.getElementById("taraTimeline"),"planet");
+ document.getElementById("taraNote").textContent="Biến thể tham khảo: Tara Dasa theo mô tả của Sanjay Rath — các hành tinh được nhóm Kendra → Panapara → Apoklima; độ dài theo Vimshottari. Điểm mở đầu đang đặt thủ công là "+start+"; chưa tự động xác minh bala/độ mạnh hành tinh, nên các mốc ngày phụ thuộc lựa chọn này. Cách gọi Tara Dasa có nhiều biến thể; không nên coi đây là kết quả đã xác nhận theo mọi tài liệu K.N. Rao.";
+}
 function renderNatal(){
  document.getElementById("natalList").innerHTML=natal.map(p=>{const lon=p.sign*30+p.deg,fp=formatPos(lon);return '<div class="natal-row"><div class="natal-name">'+p.name+'<small>'+p.nak+'</small></div><div class="natal-pos">'+fp.txt+' '+signGlyph[fp.sign]+'<br>'+signs[fp.sign]+'</div></div>'}).join("");
 }
@@ -99,7 +152,12 @@ function localDateString(d){const y=d.getFullYear(),m=String(d.getMonth()+1).pad
 const input=document.getElementById("transitDate");
 input.value=localDateString(new Date());
 input.addEventListener("change",renderTransit);
+input.addEventListener("change",renderDasa);
 document.getElementById("prevDay").addEventListener("click",()=>{const d=new Date(input.value+"T12:00:00");d.setDate(d.getDate()-1);input.value=localDateString(d);renderTransit()});
 document.getElementById("nextDay").addEventListener("click",()=>{const d=new Date(input.value+"T12:00:00");d.setDate(d.getDate()+1);input.value=localDateString(d);renderTransit()});
 document.getElementById("todayBtn").addEventListener("click",()=>{input.value=localDateString(new Date());renderTransit()});
-renderNatal();renderRasi();renderTransit();
+renderNatal();renderRasi();renderTransit();renderDasa();
+document.getElementById("taraStart").addEventListener("change",renderDasa);
+document.getElementById("prevDay").addEventListener("click",renderDasa);
+document.getElementById("nextDay").addEventListener("click",renderDasa);
+document.getElementById("todayBtn").addEventListener("click",renderDasa);
