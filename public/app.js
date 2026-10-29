@@ -190,6 +190,8 @@ function applyLanguage(){
  document.documentElement.lang=uiLanguage;
  set(".top-right > span:nth-child(2)",en?"PERSONAL CHART":"LÁ SỐ CÁ NHÂN");
  set(".natal-chip small",en?"NATAL ASCENDANT":"LAGNA NATAL");
+ set(".natal-chip strong",en?"Libra Lagna":"Lagna Thiên Bình");
+ set(".natal-chip div > span",en?"Natal chart · D1":"Lá số gốc · D1");
  set(".date-note",en?"Calculated for the selected date · Vietnam time (UTC+7)":"Tính theo ngày đã chọn · múi giờ Việt Nam (UTC+7)");
  set(".rasi-panel .lock",en?"NATAL FIXED":"NATAL CỐ ĐỊNH");
  set(".rasi-legend span:nth-child(1)",en?"As · natal Ascendant":"As · Lagna gốc");
