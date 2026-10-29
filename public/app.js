@@ -108,7 +108,7 @@ function renderDasa(){
    cycles++;
  }
  renderDasaTimeline(periods,now,document.getElementById("mandookaCurrent"),document.getElementById("mandookaTimeline"),"sign");
- document.getElementById("mandookaNote").textContent="Biến thể đang dùng: Mandooka kiểu K.N. Rao — nhảy theo nhóm cung cùng tính chất; độ dài tính từ cung đến chủ tinh (không trừ 1), cung tự chủ 12 năm và chủ tinh ở cung đối diện 10 năm. Lưu ý: natal này có 3 hành tinh không phải nút ở Kendra (Sun, Mercury, Saturn), nên chưa đạt điều kiện áp dụng ≥4 hành tinh theo mô tả thường được trích cho phương pháp K.N. Rao; timeline chỉ để tham khảo thử nghiệm.";
+ document.getElementById("mandookaNote").textContent="Biến thể đang dùng: Mandooka kiểu K.N. Rao — nhảy theo nhóm cung cùng tính chất; độ dài tính từ cung đến chủ tinh (không trừ 1), cung tự chủ 12 năm và chủ tinh ở cung đối diện 10 năm. Điều kiện số lượng: natal Libra Lagna có 4 hành tinh không phải nút ở Kendra — Mars (nhà 1), Sun và Mercury (nhà 4), Saturn (nhà 7) — nên đạt ngưỡng ≥4 hành tinh thường được nêu trong mô tả Mandooka Dasa kiểu K.N. Rao. Đây chỉ xác nhận điều kiện đếm hành tinh; cách tính và mốc thời gian vẫn cần đối chiếu tài liệu Jyotish chuyên dụng.";
  const start=document.getElementById("taraStart").value;
  // Tara variant documented by Sanjay Rath: strongest Kendra graha first, then remaining Kendra, Panapara and Apoklima grahas; Vimshottari year lengths.
  const groupFor=p=>{const h=(planetSigns[p]-6+12)%12+1;return h===1||h===4||h===7||h===10?0:[2,5,8,11].includes(h)?1:2};
