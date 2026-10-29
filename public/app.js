@@ -54,7 +54,7 @@ function geoLong(date,planet){
  }
  const earth=helio(d,"Earth");
  if(planet==="Sun")return norm(Math.atan2(-earth.y,-earth.x)/R-ayanamsa(date));
- const q=helio(d,planet),x=q.x+earth.x,y=q.y+earth.y;
+ const q=helio(d,planet),x=q.x-earth.x,y=q.y-earth.y;
  return norm(Math.atan2(y,x)/R-ayanamsa(date));
 }
 function ayanamsa(date){const y=date.getUTCFullYear()+(date.getUTCMonth()+.5)/12;return 23.85675+(y-2000)*.013968}
