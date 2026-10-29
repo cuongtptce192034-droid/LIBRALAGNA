@@ -94,12 +94,12 @@ function fmtDasaDateTime(d){return new Intl.DateTimeFormat('vi-VN',{day:'2-digit
 function renderDasaTimeline(periods,now,currentEl,timelineEl,kind){
  const active=periods.find(p=>now>=p.start&&now<p.end);
  if(active){
-   currentEl.innerHTML='<strong>'+active.label+'</strong><div>'+fmtDasaDate(active.start)+' – '+fmtDasaDate(active.end)+'</div><small>Giai đoạn hiện tại tại ngày đã chọn</small>';
+   currentEl.innerHTML='<strong>'+active.label+'</strong><div>'+fmtDasaDate(active.start)+' – '+fmtDasaDate(active.end)+'</div><small>'+(uiLanguage==='en'?'Active period on the selected date':'Giai đoạn hiện tại tại ngày đã chọn')+'</small>';
  }else{
-   currentEl.innerHTML='<strong>Chưa xác định</strong><small>Ngày chọn nằm ngoài phạm vi đã tính.</small>';
+   currentEl.innerHTML='<strong>'+(uiLanguage==='en'?'Not available':'Chưa xác định')+'</strong><small>'+(uiLanguage==='en'?'The selected date is outside the calculated range.':'Ngày chọn nằm ngoài phạm vi đã tính.')+'</small>';
  }
- timelineEl.innerHTML=periods.map((p,i)=>'<div class="dasa-period '+(p===active?'active':'')+' '+(p.subperiods?'has-subperiods':'')+'" '+(p.subperiods?'role="button" tabindex="0" data-period-index="'+i+'" aria-expanded="false"':'')+'><div><strong>'+p.label+(p.subperiods?' <span class="expand-mark">＋ chi tiết</span>':'')+'</strong><small>'+p.years.toFixed(2)+' năm</small></div><time>'+fmtDasaDateTime(p.start)+'<br>→ '+fmtDasaDateTime(p.end)+'</time></div>'+(p.subperiods?'<div class="subperiod-list" id="subperiod-'+kind+'-'+i+'" hidden>'+p.subperiods.map(sp=>'<div class="subperiod-row '+(now>=sp.start&&now<sp.end?'active':'')+'"><span><strong>'+sp.label+'</strong><small>'+sp.years.toFixed(2)+' năm</small></span><time>'+fmtDasaDateTime(sp.start)+'<br>→ '+fmtDasaDateTime(sp.end)+'</time></div>').join('')+'</div>':'')).join('');
- timelineEl.querySelectorAll('[data-period-index]').forEach(el=>{const toggle=()=>{const box=timelineEl.querySelector('#subperiod-'+kind+'-'+el.dataset.periodIndex);if(!box)return;box.hidden=!box.hidden;el.setAttribute('aria-expanded',String(!box.hidden));const mark=el.querySelector('.expand-mark');if(mark)mark.textContent=box.hidden?'＋ chi tiết':'－ thu gọn'};el.addEventListener('click',toggle);el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();toggle()}})});
+ timelineEl.innerHTML=periods.map((p,i)=>'<div class="dasa-period '+(p===active?'active':'')+' '+(p.subperiods?'has-subperiods':'')+'" '+(p.subperiods?'role="button" tabindex="0" data-period-index="'+i+'" aria-expanded="false"':'')+'><div><strong>'+p.label+(p.subperiods?' <span class="expand-mark">'+(uiLanguage==='en'?'＋ details':'＋ chi tiết')+'</span>':'')+'</strong><small>'+p.years.toFixed(2)+(uiLanguage==='en'?' years':' năm')+'</small></div><time>'+fmtDasaDateTime(p.start)+'<br>→ '+fmtDasaDateTime(p.end)+'</time></div>'+(p.subperiods?'<div class="subperiod-list" id="subperiod-'+kind+'-'+i+'" hidden>'+p.subperiods.map(sp=>'<div class="subperiod-row '+(now>=sp.start&&now<sp.end?'active':'')+'"><span><strong>'+sp.label+'</strong><small>'+sp.years.toFixed(2)+(uiLanguage==='en'?' years':' năm')+'</small></span><time>'+fmtDasaDateTime(sp.start)+'<br>→ '+fmtDasaDateTime(sp.end)+'</time></div>').join('')+'</div>':'')).join('');
+ timelineEl.querySelectorAll('[data-period-index]').forEach(el=>{const toggle=()=>{const box=timelineEl.querySelector('#subperiod-'+kind+'-'+el.dataset.periodIndex);if(!box)return;box.hidden=!box.hidden;el.setAttribute('aria-expanded',String(!box.hidden));const mark=el.querySelector('.expand-mark');if(mark)mark.textContent=box.hidden?(uiLanguage==='en'?'＋ details':'＋ chi tiết'):(uiLanguage==='en'?'－ collapse':'－ thu gọn')};el.addEventListener('click',toggle);el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();toggle()}})});
 }
 function renderDasa(){
  const val=document.getElementById("transitDate").value,parts=val.split("-").map(Number),now=new Date(Date.UTC(parts[0],parts[1]-1,parts[2],5));
@@ -109,14 +109,14 @@ function renderDasa(){
  const subperiods=mandookaRef.map(([en,abbr,a,b])=>{const start=new Date(a),end=new Date(b);return {label:en+" · "+abbr,years:(end-start)/(365.2425*86400000),start,end}});
  const periods=[{label:"Cancer MD · Cn",years:(mdEnd-mdStart)/(365.2425*86400000),start:mdStart,end:mdEnd,subperiods}];
  renderDasaTimeline(periods,now,document.getElementById("mandookaCurrent"),document.getElementById("mandookaTimeline"),"sign");
- document.getElementById("mandookaNote").textContent="Biến thể đang dùng: Mandooka kiểu K.N. Rao — nhảy theo nhóm cung cùng tính chất; độ dài tính từ cung đến chủ tinh (không trừ 1), cung tự chủ 12 năm và chủ tinh ở cung đối diện 10 năm. Điều kiện số lượng: natal Libra Lagna có 4 hành tinh không phải nút ở Kendra — Mars (nhà 1), Sun và Mercury (nhà 4), Saturn (nhà 7) — nên đạt ngưỡng ≥4 hành tinh thường được nêu trong mô tả Mandooka Dasa kiểu K.N. Rao. Đây chỉ xác nhận điều kiện đếm hành tinh; cách tính và mốc thời gian vẫn cần đối chiếu tài liệu Jyotish chuyên dụng.";
+ document.getElementById("mandookaNote").textContent=uiLanguage==='en'?"Variant used: K.N. Rao-style Mandooka — signs move in groups by modality; duration is counted from a sign to its ruler (without subtracting one), a sign in its own sign receives 12 years, and a ruler in the opposite sign receives 10 years. Eligibility count: the natal Libra Ascendant chart has four non-node planets in Kendras — Mars (1st), Sun and Mercury (4th), Saturn (7th) — meeting the commonly cited threshold of at least four planets in this K.N. Rao-style description. This checks only the planet-count condition; the method and dates should still be cross-checked against dedicated Jyotish references.":"Biến thể đang dùng: Mandooka kiểu K.N. Rao — nhảy theo nhóm cung cùng tính chất; độ dài tính từ cung đến chủ tinh (không trừ 1), cung tự chủ 12 năm và chủ tinh ở cung đối diện 10 năm. Điều kiện số lượng: natal Libra Lagna có 4 hành tinh không phải nút ở Kendra — Mars (nhà 1), Sun và Mercury (nhà 4), Saturn (nhà 7) — nên đạt ngưỡng ≥4 hành tinh thường được nêu trong mô tả Mandooka Dasa kiểu K.N. Rao. Đây chỉ xác nhận điều kiện đếm hành tinh; cách tính và mốc thời gian vẫn cần đối chiếu tài liệu Jyotish chuyên dụng.";
  // Tara Dasa: use the exact Maha Dasa sequence and boundary timestamps supplied by the user.
  const taraSeq=["Sun","Mercury","Ketu","Mars","Rahu","Saturn","Moon","Venus","Jupiter"];
  const taraBoundaries=["1998-08-15T23:09:10+07:00","2004-08-15T12:08:29+07:00","2021-08-15T20:36:38+07:00","2028-08-15T15:48:19+07:00","2035-08-16T10:39:15+07:00","2053-08-16T01:28:33+07:00","2072-08-15T22:16:19+07:00","2082-08-16T11:42:37+07:00","2102-08-17T14:39:17+07:00","2118-08-17T17:00:27+07:00"].map(x=>new Date(x));
  const taraAbbr={Sun:"Su",Mercury:"Me",Ketu:"Ke",Mars:"Ma",Rahu:"Ra",Saturn:"Sa",Moon:"Mo",Venus:"Ve",Jupiter:"Ju"};
  const taraPeriods=taraSeq.map((p,i)=>{const start=taraBoundaries[i],end=taraBoundaries[i+1],span=end-start,years=vimYears[p];const rotated=[...taraSeq.slice(i),...taraSeq.slice(0,i)];let subCursor=new Date(start);const subperiods=rotated.map(sub=>{const subYears=years*vimYears[sub]/120;const subEnd=new Date(sub===rotated[rotated.length-1]?end.getTime():subCursor.getTime()+span*vimYears[sub]/120);const item={label:sub+" · "+taraAbbr[sub],years:vimYears[sub]*years/120,start:new Date(subCursor),end:subEnd};subCursor=subEnd;return item});subperiods[subperiods.length-1].end=new Date(end);return {label:p+" · "+taraAbbr[p],years:span/(365.2425*86400000),start:new Date(start),end:new Date(end),planet:p,subperiods}});
  renderDasaTimeline(taraPeriods,now,document.getElementById("taraCurrent"),document.getElementById("taraTimeline"),"tara");
- document.getElementById("taraNote").textContent="Tara Dasa đã được chỉnh theo đúng chuỗi Maha Dasa và các mốc ngày/giờ bạn cung cấp. Bấm vào từng Maha Dasa để xem Antardasa; tiểu vận được chia theo tỷ lệ Vimshottari trong tổng thời lượng Maha Dasa, nên đây là phép triển khai tiểu vận từ bảng mốc bạn đưa, không phải xác minh độc lập từ phần mềm gốc.";
+ document.getElementById("taraNote").textContent=uiLanguage==='en'?"Tara Dasa uses the Maha Dasa sequence and date/time boundaries you supplied. Select a Maha Dasa to view its Antardasa periods. Subperiods are apportioned using Vimshottari proportions within each Maha Dasa duration, so this is an implementation derived from your reference dates, not an independent verification against the original software.":"Tara Dasa đã được chỉnh theo đúng chuỗi Maha Dasa và các mốc ngày/giờ bạn cung cấp. Bấm vào từng Maha Dasa để xem Antardasa; tiểu vận được chia theo tỷ lệ Vimshottari trong tổng thời lượng Maha Dasa, nên đây là phép triển khai tiểu vận từ bảng mốc bạn đưa, không phải xác minh độc lập từ phần mềm gốc.";
 }
 function renderNatal(){
  document.getElementById("natalList").innerHTML=natal.map(p=>{const lon=p.sign*30+p.deg,fp=formatPos(lon);return '<div class="natal-row"><div class="natal-name">'+p.name+'<small>'+p.nak+'</small></div><div class="natal-pos">'+fp.txt+' '+signGlyph[fp.sign]+'<br>'+signs[fp.sign]+'</div></div>'}).join("");
@@ -175,9 +175,51 @@ const translations={
  en:{"#copyHeading":"Natal + Transit · text snapshot","#copyIntro":"Automatically lists signs, houses and degrees for the selected date. Copy the text into ChatGPT or another AI assistant.","#copyChartText":"Copy text",".date-panel h2":"Choose a transit date",".date-panel .eyebrow":"TRANSIT DATE","#todayBtn":"Today",".rasi-panel h2":"Rāśi Chart · D1",".rasi-intro":"South Indian square chart · natal placements stay fixed.",".dasa-section h2":"Mandooka Dasa · Tara Dasa",".transit-panel h2":"Transiting planets",".natal-panel h2":"Your Natal Chart",".explain-panel h2":"How to read the chart",".sub":"Fixed natal chart · the sky changes with the selected date.",".hero .eyebrow":"YOUR NATAL · YOUR SKY",".transit-panel th:nth-child(2)":"Sidereal position",".transit-panel th:nth-child(3)":"Nakshatra",".transit-panel th:nth-child(4)":"House from Lagna",".transit-panel th:nth-child(5)":"House from Moon"}
 };
 function applyLanguage(){
- const dict=translations[uiLanguage];Object.entries(dict).forEach(([sel,val])=>{const el=document.querySelector(sel);if(el)el.textContent=val});
- document.getElementById("langToggle").textContent=uiLanguage==="vi"?"EN":"VI";
+ const dict=translations[uiLanguage];Object.entries(dict).forEach(([sel,val])=>{document.querySelectorAll(sel).forEach(el=>{el.textContent=val})});
+ const en=uiLanguage==="en";
+ const set=(selector,value)=>document.querySelectorAll(selector).forEach(el=>{el.textContent=value});
+ const copy=(selector,value)=>{const el=document.querySelector(selector);if(el)el.textContent=value};
+ document.getElementById("langToggle").textContent=en?"VI":"EN";
+ document.getElementById("prevDay").setAttribute("aria-label",en?"Previous day":"Ngày trước");
+ document.getElementById("nextDay").setAttribute("aria-label",en?"Next day":"Ngày sau");
+ document.getElementById("themeToggle").setAttribute("aria-label",en?"Switch light/dark theme":"Đổi chế độ sáng/tối");
  document.documentElement.lang=uiLanguage;
+ set(".top-right > span:nth-child(2)",en?"PERSONAL CHART":"LÁ SỐ CÁ NHÂN");
+ set(".natal-chip small",en?"NATAL ASCENDANT":"LAGNA NATAL");
+ set(".date-note",en?"Calculated for the selected date · Vietnam time (UTC+7)":"Tính theo ngày đã chọn · múi giờ Việt Nam (UTC+7)");
+ set(".rasi-panel .lock",en?"NATAL FIXED":"NATAL CỐ ĐỊNH");
+ set(".rasi-legend span:nth-child(1)",en?"As · natal Ascendant":"As · Lagna gốc");
+ set(".rasi-legend span:nth-child(2)",en?"Natal · rose":"Natal · đỏ hồng");
+ set(".rasi-legend span:nth-child(3)",en?"Transit T · blue":"Transit T · xanh dương");
+ set(".rasi-legend span:nth-child(4)",en?"Choose a date to update":"Chọn ngày để cập nhật");
+ set(".dasa-section .lock",en?"DASA TIMELINE":"DÒNG THỜI GIAN DASA");
+ set(".dasa-intro",en?"View the periods for the selected date above. Both systems have multiple variants; the rules used are described below each table and should be cross-checked with dedicated Jyotish references.":"Tính giai đoạn theo ngày đang chọn ở phía trên. Hai hệ có nhiều biến thể; kết quả hiển thị theo quy tắc được ghi rõ dưới từng bảng và cần đối chiếu với tài liệu/phần mềm Jyotish chuyên dụng.");
+ set(".tara-method",en?"The Tara Dasa Maha Dasa sequence and timestamps were entered from your reference table. Select a Maha Dasa period to expand its Antardasa subperiods.":"Chuỗi Maha Dasa và mốc ngày được nhập theo bảng Tara Dasa bạn cung cấp. Chọn một Maha Dasa trong danh sách để mở các tiểu vận (Antardasa).");
+ set(".stat-card:nth-child(1) .stat-label",en?"NATAL ASCENDANT":"LAGNA GỐC");
+ set(".stat-card:nth-child(2) .stat-label",en?"NATAL MOON":"MOON GỐC");
+ set(".stat-card:nth-child(3) .stat-label",en?"AYANAMSA":"AYANAMSA");
+ set(".stat-card:nth-child(1) small",en?"Ascendant · 1st house":"Ascendant · nhà 1");
+ set(".stat-card:nth-child(2) small",en?"Chandra Lagna · 14°23′":"Chandra Lagna · 14°23′");
+ set(".stat-card:nth-child(3) small",en?"Sidereal zodiac":"Hoàng đạo sidereal");
+ set(".transit-panel .lock",en?"FIXED":"CỐ ĐỊNH");
+ // Keep the live-status icon intact while changing languages.
+ set(".transit-panel .section-head .eyebrow",en?"MOVING PLANETS":"HÀNH TINH QUÁ CẢNH");
+ set(".natal-panel .section-head .eyebrow",en?"LOCKED BASELINE":"LÁ SỐ GỐC CỐ ĐỊNH");
+ set(".rasi-panel .section-head .eyebrow",en?"FIXED NATAL CHART":"LÁ SỐ GỐC CỐ ĐỊNH");
+ set(".dasa-section .section-head .eyebrow",en?"JAIMINI TIMING":"THỜI VẬN JAIMINI");
+ set(".dasa-card:first-child > .eyebrow",en?"RĀŚI DAŚĀ":"RĀŚI DAŚĀ");
+ set(".dasa-card:nth-child(2) > .eyebrow",en?"GRAHA DAŚĀ · VARIANT":"GRAHA DAŚĀ · BIẾN THỂ");
+ // Dasa notes are translated by renderDasa().
+ set(".natal-foot",en?"Natal data remains fixed; only the transit layer changes with the selected date.":"Dữ liệu natal được giữ nguyên; chỉ lớp transit thay đổi theo ngày.");
+ set(".fineprint",en?"*Positions use the app’s built-in approximate astronomy and are intended for exploration; they have not been validated against a standard Jyotish ephemeris.":"*Vị trí là ước tính thiên văn nội bộ, dùng để khám phá sơ bộ; chưa thay thế ephemeris Jyotish chuẩn đã kiểm chứng.");
+ set(".explain-panel .eyebrow",en?"HOW TO READ":"CÁCH ĐỌC BIỂU ĐỒ");
+ set(".explain-panel h2",en?"Reading the reference layers":"Đọc lớp đối chiếu");
+ const readTitles=en?["House from Lagna","House from Moon","Nakshatra"]:["Nhà từ Lagna","Nhà từ Moon","Nakshatra"];
+ const readBodies=en?["Transit positions are counted from the Libra Ascendant in the supplied natal chart.","Count houses from the natal Moon in Leo to examine transits from Chandra Lagna.","Nakshatras are shown using estimated sidereal longitude; refine them with a precise ephemeris if needed."]:["Vị trí transit tính từ Libra Ascendant trong natal bạn cung cấp.","Đếm nhà từ Moon natal ở Leo để quan sát transit theo Chandra Lagna.","Hiển thị nakshatra theo longitude sidereal ước tính; có thể tinh chỉnh bằng ephemeris chính xác."];
+ document.querySelectorAll(".read-grid>div").forEach((el,i)=>{const h=el.querySelector("h3"),p=el.querySelector("p");if(h)h.textContent=readTitles[i];if(p)p.textContent=readBodies[i]});
+ const footer=document.querySelector("footer span:last-child");if(footer)footer.textContent=en?"Jyotish is interpretive · Verify precise timings with a trusted ephemeris.":"Jyotish mang tính diễn giải · Hãy kiểm tra thời điểm chính xác bằng ephemeris đáng tin cậy.";
+ const brandSub=document.querySelector(".brand small");if(brandSub)brandSub.textContent=en?"VEDIC NATAL & TRANSIT":"LÁ SỐ GỐC & QUÁ CẢNH VỆ ĐÀ";
+ renderDasa();
  buildChartText();
 }
 const themeButton=document.getElementById("themeToggle");
