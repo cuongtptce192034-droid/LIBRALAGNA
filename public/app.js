@@ -69,14 +69,17 @@ function houseFrom(lon,baseSign){return (Math.floor(lon/30)-baseSign+12)%12+1}
 function renderNatal(){
  document.getElementById("natalList").innerHTML=natal.map(p=>{const lon=p.sign*30+p.deg,fp=formatPos(lon);return '<div class="natal-row"><div class="natal-name">'+p.name+'<small>'+p.nak+'</small></div><div class="natal-pos">'+fp.txt+' '+signGlyph[fp.sign]+'<br>'+signs[fp.sign]+'</div></div>'}).join("");
 }
-function renderRasi(){
+function renderRasi(dateOverride){
  const symbols={Sun:"Su",Moon:"Mo",Mars:"Ma",Mercury:"Me",Jupiter:"Ju",Venus:"Ve",Saturn:"Sa",Rahu:"Ra",Ketu:"Ke"};
  const names={0:"Aries",1:"Taurus",2:"Gemini",3:"Cancer",4:"Leo",5:"Virgo",6:"Libra",7:"Scorpio",8:"Sagittarius",9:"Capricorn",10:"Aquarius",11:"Pisces"};
+ const inputValue=document.getElementById("transitDate").value;const parts=inputValue.split("-").map(Number);const transitDate=dateOverride||new Date(Date.UTC(parts[0],parts[1]-1,parts[2],5,0,0));
+ const moving=grahas.map(g=>({name:g.name,sym:symbols[g.name],sign:Math.floor(geoLong(transitDate,g.name)/30)}));
  document.querySelectorAll(".rasi-cell").forEach(cell=>{
   const sign=Number(cell.dataset.sign);
-  const planets=natal.filter(p=>p.sign===sign).map(p=>'<span class="rasi-planet">'+symbols[p.planet]+'</span>').join("");
-  const asc=sign===6?'<span class="rasi-asc">As</span>':"";
-  cell.innerHTML='<span class="rasi-sign">'+signGlyph[sign]+' '+names[sign]+'</span><div class="rasi-placements">'+asc+planets+'</div>';
+  const planets=natal.filter(p=>p.sign===sign).map(p=>'<span class="rasi-planet" title="Natal '+p.name+'">'+symbols[p.planet]+'</span>').join("");
+  const transits=moving.filter(p=>p.sign===sign).map(p=>'<span class="rasi-transit" title="Transit '+p.name+'">'+p.sym+'<sup>T</sup></span>').join("");
+  const asc=sign===6?'<span class="rasi-asc" title="Natal Ascendant">As</span>':"";
+  cell.innerHTML='<span class="rasi-sign">'+signGlyph[sign]+' '+names[sign]+'</span><div class="rasi-placements">'+asc+planets+transits+'</div>';
  });
 }
 function renderTransit(){
@@ -84,6 +87,7 @@ function renderTransit(){
  const [yy,mm,dd]=value.split("-").map(Number);
  // Evaluate at 12:00 Vietnam time (05:00 UTC), keeping the chosen local date stable.
  const date=new Date(Date.UTC(yy,mm-1,dd,5,0,0));
+ renderRasi(date);
  const rows=grahas.map(g=>{const lon=geoLong(date,g.name),fp=formatPos(lon),nk=Math.floor(lon/(360/27)),pada=Math.floor((lon%(360/27))/(360/108))+1;
  const houseL=houseFrom(lon,6),houseM=houseFrom(lon,4);
  return {g,lon,fp,nk,pada,houseL,houseM};});
