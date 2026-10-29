@@ -103,12 +103,11 @@ function renderDasaTimeline(periods,now,currentEl,timelineEl,kind){
 }
 function renderDasa(){
  const val=document.getElementById("transitDate").value,parts=val.split("-").map(Number),now=new Date(Date.UTC(parts[0],parts[1]-1,parts[2],5));
- // Show the next 12 sign periods from birth, then extend if needed to cover the selected date.
- const seq=mandookaOrder();let cursor=new Date(dasaBirth),periods=[],cycles=0;
- while(cursor<=now&&cycles<10){
-   for(const sign of seq){const years=mandookaYears(sign),end=addDasaYears(cursor,years);const start=new Date(cursor),span=end-start;const startIndex=seq.indexOf(sign);const subOrder=[...seq.slice(startIndex),...seq.slice(0,startIndex)];const subWeights=subOrder.map(s=>mandookaYears(s));const totalWeight=subWeights.reduce((a,b)=>a+b,0);let subCursor=new Date(start);const subperiods=subOrder.map((subSign,j)=>{const subEnd=j===subOrder.length-1?new Date(end):new Date(subCursor.getTime()+span*subWeights[j]/totalWeight);const item={label:signNameVi[subSign]+" · "+signs[subSign],years:(subEnd-subCursor)/(365.2425*86400000),start:new Date(subCursor),end:subEnd};subCursor=subEnd;return item});periods.push({label:signNameVi[sign]+" · "+signs[sign],years,start,end,sign,subperiods});cursor=end;if(cursor>now)break}
-   cycles++;
- }
+ // Mandooka reference dates supplied by the user: exact K.N. Rao Cancer MD and Antardasas.
+ const mandookaRef=[["Cancer","Cn","2024-02-03T09:33:29+07:00","2025-02-02T15:39:05+07:00"],["Libra","Li","2025-02-02T15:39:05+07:00","2026-02-02T21:51:52+07:00"],["Capricorn","Cp","2026-02-02T21:51:52+07:00","2027-02-03T03:59:03+07:00"],["Aries","Ar","2027-02-03T03:59:03+07:00","2028-02-03T10:04:33+07:00"],["Leo","Le","2028-02-03T10:04:33+07:00","2029-02-02T16:14:21+07:00"],["Scorpio","Sc","2029-02-02T16:14:21+07:00","2030-02-02T22:23:17+07:00"],["Aquarius","Aq","2030-02-02T22:23:17+07:00","2031-02-03T04:31:18+07:00"],["Taurus","Ta","2031-02-03T04:31:18+07:00","2032-02-03T10:40:43+07:00"],["Virgo","Vi","2032-02-03T10:40:43+07:00","2033-02-02T16:51:56+07:00"],["Sagittarius","Sg","2033-02-02T16:51:56+07:00","2034-02-02T23:07:59+07:00"],["Pisces","Pi","2034-02-02T23:07:59+07:00","2035-02-03T05:16:43+07:00"],["Gemini","Ge","2035-02-03T05:16:43+07:00","2036-02-03T11:22:28+07:00"]];
+ const mdStart=new Date("2024-02-03T09:33:29+07:00"),mdEnd=new Date("2036-02-03T11:22:28+07:00");
+ const subperiods=mandookaRef.map(([en,abbr,a,b])=>{const start=new Date(a),end=new Date(b);return {label:en+" · "+abbr,years:(end-start)/(365.2425*86400000),start,end}});
+ const periods=[{label:"Cancer MD · Cn",years:(mdEnd-mdStart)/(365.2425*86400000),start:mdStart,end:mdEnd,subperiods}];
  renderDasaTimeline(periods,now,document.getElementById("mandookaCurrent"),document.getElementById("mandookaTimeline"),"sign");
  document.getElementById("mandookaNote").textContent="Biến thể đang dùng: Mandooka kiểu K.N. Rao — nhảy theo nhóm cung cùng tính chất; độ dài tính từ cung đến chủ tinh (không trừ 1), cung tự chủ 12 năm và chủ tinh ở cung đối diện 10 năm. Điều kiện số lượng: natal Libra Lagna có 4 hành tinh không phải nút ở Kendra — Mars (nhà 1), Sun và Mercury (nhà 4), Saturn (nhà 7) — nên đạt ngưỡng ≥4 hành tinh thường được nêu trong mô tả Mandooka Dasa kiểu K.N. Rao. Đây chỉ xác nhận điều kiện đếm hành tinh; cách tính và mốc thời gian vẫn cần đối chiếu tài liệu Jyotish chuyên dụng.";
  // Tara Dasa: use the exact Maha Dasa sequence and boundary timestamps supplied by the user.
