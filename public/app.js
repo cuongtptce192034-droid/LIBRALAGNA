@@ -90,6 +90,7 @@ function mandookaYears(sign){
  if((lordSign-sign+12)%12===6)return 10;
  return count;
 }
+function fmtDasaDateTime(d){return new Intl.DateTimeFormat('vi-VN',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false,timeZone:'Asia/Ho_Chi_Minh'}).format(d)}
 function renderDasaTimeline(periods,now,currentEl,timelineEl,kind){
  const active=periods.find(p=>now>=p.start&&now<p.end);
  if(active){
@@ -97,7 +98,8 @@ function renderDasaTimeline(periods,now,currentEl,timelineEl,kind){
  }else{
    currentEl.innerHTML='<strong>Chưa xác định</strong><small>Ngày chọn nằm ngoài phạm vi đã tính.</small>';
  }
- timelineEl.innerHTML=periods.map(p=>'<div class="dasa-period '+(p===active?'active':'')+'"><div><strong>'+p.label+'</strong><small>'+p.years.toFixed(2)+' năm</small></div><time>'+fmtDasaDate(p.start)+'<br>→ '+fmtDasaDate(p.end)+'</time></div>').join("");
+ timelineEl.innerHTML=periods.map((p,i)=>'<div class="dasa-period '+(p===active?'active':'')+' '+(p.subperiods?'has-subperiods':'')+'" '+(p.subperiods?'role="button" tabindex="0" data-period-index="'+i+'" aria-expanded="false"':'')+'><div><strong>'+p.label+(p.subperiods?' <span class="expand-mark">＋ chi tiết</span>':'')+'</strong><small>'+p.years.toFixed(2)+' năm</small></div><time>'+fmtDasaDateTime(p.start)+'<br>→ '+fmtDasaDateTime(p.end)+'</time></div>'+(p.subperiods?'<div class="subperiod-list" id="subperiod-'+kind+'-'+i+'" hidden>'+p.subperiods.map(sp=>'<div class="subperiod-row '+(now>=sp.start&&now<sp.end?'active':'')+'"><span><strong>'+sp.label+'</strong><small>'+sp.years.toFixed(2)+' năm</small></span><time>'+fmtDasaDateTime(sp.start)+'<br>→ '+fmtDasaDateTime(sp.end)+'</time></div>').join('')+'</div>':'')).join('');
+ timelineEl.querySelectorAll('[data-period-index]').forEach(el=>{const toggle=()=>{const box=timelineEl.querySelector('#subperiod-'+kind+'-'+el.dataset.periodIndex);if(!box)return;box.hidden=!box.hidden;el.setAttribute('aria-expanded',String(!box.hidden));const mark=el.querySelector('.expand-mark');if(mark)mark.textContent=box.hidden?'＋ chi tiết':'－ thu gọn'};el.addEventListener('click',toggle);el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();toggle()}})});
 }
 function renderDasa(){
  const val=document.getElementById("transitDate").value,parts=val.split("-").map(Number),now=new Date(Date.UTC(parts[0],parts[1]-1,parts[2],5));
@@ -109,15 +111,13 @@ function renderDasa(){
  }
  renderDasaTimeline(periods,now,document.getElementById("mandookaCurrent"),document.getElementById("mandookaTimeline"),"sign");
  document.getElementById("mandookaNote").textContent="Biến thể đang dùng: Mandooka kiểu K.N. Rao — nhảy theo nhóm cung cùng tính chất; độ dài tính từ cung đến chủ tinh (không trừ 1), cung tự chủ 12 năm và chủ tinh ở cung đối diện 10 năm. Điều kiện số lượng: natal Libra Lagna có 4 hành tinh không phải nút ở Kendra — Mars (nhà 1), Sun và Mercury (nhà 4), Saturn (nhà 7) — nên đạt ngưỡng ≥4 hành tinh thường được nêu trong mô tả Mandooka Dasa kiểu K.N. Rao. Đây chỉ xác nhận điều kiện đếm hành tinh; cách tính và mốc thời gian vẫn cần đối chiếu tài liệu Jyotish chuyên dụng.";
- const start=document.getElementById("taraStart").value;
- // Tara variant documented by Sanjay Rath: strongest Kendra graha first, then remaining Kendra, Panapara and Apoklima grahas; Vimshottari year lengths.
- const groupFor=p=>{const h=(planetSigns[p]-6+12)%12+1;return h===1||h===4||h===7||h===10?0:[2,5,8,11].includes(h)?1:2};
- const rotated=[...vimOrder.slice(vimOrder.indexOf(start)),...vimOrder.slice(0,vimOrder.indexOf(start))];
- const taraSeq=[0,1,2].flatMap(group=>rotated.filter(p=>groupFor(p)===group));
- cursor=new Date(dasaBirth);periods=[];cycles=0;
- while(cursor<=now&&cycles<10){for(const p of taraSeq){const years=vimYears[p],end=addDasaYears(cursor,years);periods.push({label:p+" · "+({Sun:"Su",Moon:"Mo",Mars:"Ma",Mercury:"Me",Jupiter:"Ju",Venus:"Ve",Saturn:"Sa",Rahu:"Ra",Ketu:"Ke"}[p]),years,start:new Date(cursor),end,planet:p});cursor=end;if(cursor>now)break}cycles++}
- renderDasaTimeline(periods,now,document.getElementById("taraCurrent"),document.getElementById("taraTimeline"),"planet");
- document.getElementById("taraNote").textContent="Biến thể tham khảo: Tara Dasa theo mô tả của Sanjay Rath — các hành tinh được nhóm Kendra → Panapara → Apoklima; độ dài theo Vimshottari. Điểm mở đầu đang đặt thủ công là "+start+"; chưa tự động xác minh bala/độ mạnh hành tinh, nên các mốc ngày phụ thuộc lựa chọn này. Cách gọi Tara Dasa có nhiều biến thể; không nên coi đây là kết quả đã xác nhận theo mọi tài liệu K.N. Rao.";
+ // Tara Dasa: use the exact Maha Dasa sequence and boundary timestamps supplied by the user.
+ const taraSeq=["Sun","Mercury","Ketu","Mars","Rahu","Saturn","Moon","Venus","Jupiter"];
+ const taraBoundaries=["1998-08-15T23:09:10+07:00","2004-08-15T12:08:29+07:00","2021-08-15T20:36:38+07:00","2028-08-15T15:48:19+07:00","2035-08-16T10:39:15+07:00","2053-08-16T01:28:33+07:00","2072-08-15T22:16:19+07:00","2082-08-16T11:42:37+07:00","2102-08-17T14:39:17+07:00","2118-08-17T17:00:27+07:00"].map(x=>new Date(x));
+ const taraAbbr={Sun:"Su",Mercury:"Me",Ketu:"Ke",Mars:"Ma",Rahu:"Ra",Saturn:"Sa",Moon:"Mo",Venus:"Ve",Jupiter:"Ju"};
+ const taraPeriods=taraSeq.map((p,i)=>{const start=taraBoundaries[i],end=taraBoundaries[i+1],span=end-start,years=vimYears[p];const rotated=[...taraSeq.slice(i),...taraSeq.slice(0,i)];let subCursor=new Date(start);const subperiods=rotated.map(sub=>{const subYears=years*vimYears[sub]/120;const subEnd=new Date(sub===rotated[rotated.length-1]?end.getTime():subCursor.getTime()+span*vimYears[sub]/120);const item={label:sub+" · "+taraAbbr[sub],years:vimYears[sub]*years/120,start:new Date(subCursor),end:subEnd};subCursor=subEnd;return item});subperiods[subperiods.length-1].end=new Date(end);return {label:p+" · "+taraAbbr[p],years:span/(365.2425*86400000),start:new Date(start),end:new Date(end),planet:p,subperiods}});
+ renderDasaTimeline(taraPeriods,now,document.getElementById("taraCurrent"),document.getElementById("taraTimeline"),"tara");
+ document.getElementById("taraNote").textContent="Tara Dasa đã được chỉnh theo đúng chuỗi Maha Dasa và các mốc ngày/giờ bạn cung cấp. Bấm vào từng Maha Dasa để xem Antardasa; tiểu vận được chia theo tỷ lệ Vimshottari trong tổng thời lượng Maha Dasa, nên đây là phép triển khai tiểu vận từ bảng mốc bạn đưa, không phải xác minh độc lập từ phần mềm gốc.";
 }
 function renderNatal(){
  document.getElementById("natalList").innerHTML=natal.map(p=>{const lon=p.sign*30+p.deg,fp=formatPos(lon);return '<div class="natal-row"><div class="natal-name">'+p.name+'<small>'+p.nak+'</small></div><div class="natal-pos">'+fp.txt+' '+signGlyph[fp.sign]+'<br>'+signs[fp.sign]+'</div></div>'}).join("");
@@ -157,7 +157,7 @@ document.getElementById("prevDay").addEventListener("click",()=>{const d=new Dat
 document.getElementById("nextDay").addEventListener("click",()=>{const d=new Date(input.value+"T12:00:00");d.setDate(d.getDate()+1);input.value=localDateString(d);renderTransit()});
 document.getElementById("todayBtn").addEventListener("click",()=>{input.value=localDateString(new Date());renderTransit()});
 renderNatal();renderRasi();renderTransit();renderDasa();
-document.getElementById("taraStart").addEventListener("change",renderDasa);
+// Tara Maha Dasa sequence is fixed to the supplied reference table; no manual start selector.
 document.getElementById("prevDay").addEventListener("click",renderDasa);
 document.getElementById("nextDay").addEventListener("click",renderDasa);
 document.getElementById("todayBtn").addEventListener("click",renderDasa);
