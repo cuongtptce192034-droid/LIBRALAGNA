@@ -125,11 +125,11 @@ function renderRasi(dateOverride){
  const symbols={Sun:"Su",Moon:"Mo",Mars:"Ma",Mercury:"Me",Jupiter:"Ju",Venus:"Ve",Saturn:"Sa",Rahu:"Ra",Ketu:"Ke"};
  const names={0:"Aries",1:"Taurus",2:"Gemini",3:"Cancer",4:"Leo",5:"Virgo",6:"Libra",7:"Scorpio",8:"Sagittarius",9:"Capricorn",10:"Aquarius",11:"Pisces"};
  const inputValue=document.getElementById("transitDate").value;const parts=inputValue.split("-").map(Number);const transitDate=dateOverride||new Date(Date.UTC(parts[0],parts[1]-1,parts[2],5,0,0));
- const moving=grahas.map(g=>({name:g.name,sym:symbols[g.name],sign:Math.floor(geoLong(transitDate,g.name)/30)}));
+ const moving=grahas.map(g=>{const lon=geoLong(transitDate,g.name),before=geoLong(new Date(transitDate.getTime()-86400000),g.name),after=geoLong(new Date(transitDate.getTime()+86400000),g.name),motion=((after-before+540)%360)-180;return {name:g.name,sym:symbols[g.name],sign:Math.floor(lon/30),retrograde:motion<0}});
  document.querySelectorAll(".rasi-cell").forEach(cell=>{
   const sign=Number(cell.dataset.sign);
   const planets=natal.filter(p=>p.sign===sign).map(p=>'<span class="rasi-planet" title="Natal '+p.name+'">'+symbols[p.planet]+'</span>').join("");
-  const transits=moving.filter(p=>p.sign===sign).map(p=>'<span class="rasi-transit" title="Transit '+p.name+'">'+p.sym+'<sup>T</sup></span>').join("");
+  const transits=moving.filter(p=>p.sign===sign).map(p=>'<span class="rasi-transit" title="Transit '+p.name+(p.retrograde?' · Retrograde':'')+'">'+p.sym+'<sup>T</sup>'+(p.retrograde?'<sup class="rasi-retrograde">R</sup>':'')+'</span>').join("");
   const asc=sign===6?'<span class="rasi-asc" title="Natal Ascendant">As</span>':"";
   cell.innerHTML='<span class="rasi-sign">'+signGlyph[sign]+' '+names[sign]+'</span><div class="rasi-placements">'+asc+planets+transits+'</div>';
  });
