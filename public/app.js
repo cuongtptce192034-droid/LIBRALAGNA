@@ -37,6 +37,12 @@ function helio(d, p){
  return {x,y,z};
 }
 function geoLong(date,planet){
+ // Use Astronomy Engine's geocentric ephemeris for the seven visible planets; sidereal longitude uses Lahiri ayanamsa.
+ if(window.Astronomy && planet!=="Rahu" && planet!=="Ketu"){
+   const vector=window.Astronomy.GeoVector(planet,date,true);
+   const ecliptic=window.Astronomy.Ecliptic(vector);
+   return norm(ecliptic.elon-ayanamsa(date));
+ }
  const jd=date.getTime()/86400000+2440587.5,d=jd-2451543.5;
  if(planet==="Rahu"||planet==="Ketu"){
    const node=norm(125.1228-0.0529538083*d);return norm((planet==="Ketu"?node+180:node)-ayanamsa(date));
