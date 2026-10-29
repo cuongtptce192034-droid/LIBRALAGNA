@@ -69,6 +69,16 @@ function houseFrom(lon,baseSign){return (Math.floor(lon/30)-baseSign+12)%12+1}
 function renderNatal(){
  document.getElementById("natalList").innerHTML=natal.map(p=>{const lon=p.sign*30+p.deg,fp=formatPos(lon);return '<div class="natal-row"><div class="natal-name">'+p.name+'<small>'+p.nak+'</small></div><div class="natal-pos">'+fp.txt+' '+signGlyph[fp.sign]+'<br>'+signs[fp.sign]+'</div></div>'}).join("");
 }
+function renderRasi(){
+ const symbols={Sun:"Su",Moon:"Mo",Mars:"Ma",Mercury:"Me",Jupiter:"Ju",Venus:"Ve",Saturn:"Sa",Rahu:"Ra",Ketu:"Ke"};
+ const names={0:"Aries",1:"Taurus",2:"Gemini",3:"Cancer",4:"Leo",5:"Virgo",6:"Libra",7:"Scorpio",8:"Sagittarius",9:"Capricorn",10:"Aquarius",11:"Pisces"};
+ document.querySelectorAll(".rasi-cell").forEach(cell=>{
+  const sign=Number(cell.dataset.sign);
+  const planets=natal.filter(p=>p.sign===sign).map(p=>'<span class="rasi-planet">'+symbols[p.planet]+'</span>').join("");
+  const asc=sign===6?'<span class="rasi-asc">As</span>':"";
+  cell.innerHTML='<span class="rasi-sign">'+signGlyph[sign]+' '+names[sign]+'</span><div class="rasi-placements">'+asc+planets+'</div>';
+ });
+}
 function renderTransit(){
  const value=document.getElementById("transitDate").value;
  const [yy,mm,dd]=value.split("-").map(Number);
@@ -88,4 +98,4 @@ input.addEventListener("change",renderTransit);
 document.getElementById("prevDay").addEventListener("click",()=>{const d=new Date(input.value+"T12:00:00");d.setDate(d.getDate()-1);input.value=localDateString(d);renderTransit()});
 document.getElementById("nextDay").addEventListener("click",()=>{const d=new Date(input.value+"T12:00:00");d.setDate(d.getDate()+1);input.value=localDateString(d);renderTransit()});
 document.getElementById("todayBtn").addEventListener("click",()=>{input.value=localDateString(new Date());renderTransit()});
-renderNatal();renderTransit();
+renderNatal();renderRasi();renderTransit();
