@@ -106,7 +106,7 @@ function renderDasa(){
  // Show the next 12 sign periods from birth, then extend if needed to cover the selected date.
  const seq=mandookaOrder();let cursor=new Date(dasaBirth),periods=[],cycles=0;
  while(cursor<=now&&cycles<10){
-   for(const sign of seq){const years=mandookaYears(sign),end=addDasaYears(cursor,years);periods.push({label:signNameVi[sign]+" · "+signs[sign],years,start:new Date(cursor),end,sign});cursor=end;if(cursor>now)break}
+   for(const sign of seq){const years=mandookaYears(sign),end=addDasaYears(cursor,years);const start=new Date(cursor),span=end-start;const startIndex=seq.indexOf(sign);const subOrder=[...seq.slice(startIndex),...seq.slice(0,startIndex)];const subWeights=subOrder.map(s=>mandookaYears(s));const totalWeight=subWeights.reduce((a,b)=>a+b,0);let subCursor=new Date(start);const subperiods=subOrder.map((subSign,j)=>{const subEnd=j===subOrder.length-1?new Date(end):new Date(subCursor.getTime()+span*subWeights[j]/totalWeight);const item={label:signNameVi[subSign]+" · "+signs[subSign],years:(subEnd-subCursor)/(365.2425*86400000),start:new Date(subCursor),end:subEnd};subCursor=subEnd;return item});periods.push({label:signNameVi[sign]+" · "+signs[sign],years,start,end,sign,subperiods});cursor=end;if(cursor>now)break}
    cycles++;
  }
  renderDasaTimeline(periods,now,document.getElementById("mandookaCurrent"),document.getElementById("mandookaTimeline"),"sign");
