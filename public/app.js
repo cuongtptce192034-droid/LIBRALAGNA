@@ -142,8 +142,12 @@ function renderTransit(){
  renderRasi(date);
  const rows=grahas.map(g=>{const lon=geoLong(date,g.name),fp=formatPos(lon),nk=Math.floor(lon/(360/27)),pada=Math.floor((lon%(360/27))/(360/108))+1;
  const houseL=houseFrom(lon,6),houseM=houseFrom(lon,4);
- return {g,lon,fp,nk,pada,houseL,houseM};});
- document.getElementById("transitRows").innerHTML=rows.map(r=>'<tr><td><div class="planet"><span class="planet-symbol">'+r.g.sym+'</span>'+r.g.name+'</div></td><td class="position">'+r.fp.txt+' <span class="sign-tag">'+signGlyph[r.fp.sign]+' '+signs[r.fp.sign]+'</span></td><td>'+nakNames[r.nk]+' <span style="color:var(--muted)">P'+r.pada+'</span></td><td><span class="house-pill">'+r.houseL+'H</span></td><td><span class="house-pill">'+r.houseM+'H</span></td></tr>').join("");
+ // Compare adjacent sidereal longitudes to identify apparent retrograde motion across 0° Aries.
+ const before=geoLong(new Date(date.getTime()-86400000),g.name),after=geoLong(new Date(date.getTime()+86400000),g.name);
+ const motion=((after-before+540)%360)-180;
+ const retrograde=motion<0;
+ return {g,lon,fp,nk,pada,houseL,houseM,retrograde};});
+ document.getElementById("transitRows").innerHTML=rows.map(r=>'<tr><td><div class="planet"><span class="planet-symbol">'+r.g.sym+'</span>'+r.g.name+(r.retrograde?' <strong class="retrograde-mark" title="Retrograde">R</strong>':'')+'</div></td><td class="position">'+r.fp.txt+' <span class="sign-tag">'+signGlyph[r.fp.sign]+' '+signs[r.fp.sign]+'</span></td><td>'+nakNames[r.nk]+' <span style="color:var(--muted)">P'+r.pada+'</span></td><td><span class="house-pill">'+r.houseL+'H</span></td><td><span class="house-pill">'+r.houseM+'H</span></td></tr>').join("");
  const opts={weekday:"long",year:"numeric",month:"long",day:"numeric",timeZone:"Asia/Ho_Chi_Minh"};
  document.getElementById("dateLabel").textContent=new Intl.DateTimeFormat(uiLanguage==="en"?"en-US":"vi-VN",opts).format(date)+(uiLanguage==="en"?" · calculated at 12:00 Vietnam time (UTC+7)":" · tính tại 12:00 giờ Việt Nam (UTC+7)");
  if(typeof buildChartText==="function")buildChartText();
